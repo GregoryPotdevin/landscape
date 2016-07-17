@@ -89,7 +89,7 @@ class _DragDrop extends React.Component {
   }
   
   componentDidMount(){
-    this.widgetManager.initRemote()
+    // this.widgetManager.initRemote()
   }
   
   undo(){
