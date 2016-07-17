@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node start.js",
     "test": "karma start karma.conf.js",
-    "dist": "cp -R public/* dist/"
+    "dist": "rm -Rf dist/* && webpack --config webpack.prod.config.js -p"
   },
   "authors": [
     {
