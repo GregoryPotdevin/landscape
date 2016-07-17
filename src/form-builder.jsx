@@ -11,8 +11,8 @@ import { ComponentsPanel, PropertiesPanel} from './page-builder'
 
 require("../theme/index.scss");
 
-console.log("window", window);
-console.log("window.frames[0]", window.frames[0]);
+// console.log("window", window);
+// console.log("window.frames[0]", window.frames[0]);
 
 class TopBar extends React.Component {
   render(){

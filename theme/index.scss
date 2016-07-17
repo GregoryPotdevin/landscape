@@ -550,3 +550,38 @@ h3 {
     font-size: 14px;
   }
 }
+
+ul.ac-sidebar-list {
+  list-style-type: none;
+  padding-left: 0px;
+}
+
+ul.ac-sidebar-list>li {
+  padding: 8px;
+  cursor: pointer;
+  
+  &.active {
+    background-color: white;
+  }
+  &:hover {
+    background-color: white;
+  }
+}
+
+.fit {
+  background-size:     contain;                      /* <------ */
+  background-repeat:   no-repeat;
+  background-position: center center;              /* optional, center the image */
+}
+
+.ac-field-image {
+  width: 120px;
+  height: 120px;
+  border: 1px dashed;
+  
+  &.hover {
+    border-color: red;
+  } 
+  
+
+}

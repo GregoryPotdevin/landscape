@@ -116,7 +116,7 @@ export class StringField extends React.Component {
     const { name, value, type, onChange, autoFocus } = this.props
     const inputType = type == "string" ? "text" : type
     
-    if ((typeof value) === "string"){
+    if ((typeof value) === "string" || ((typeof value) === "undefined")){
       return (
         <input type={inputType}
             style={{width: '100%'}}

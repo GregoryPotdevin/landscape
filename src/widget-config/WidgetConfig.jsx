@@ -138,6 +138,67 @@ class ColorField extends React.Component {
   }
 }
 
+class ImageField extends React.Component {
+  
+  constructor(props){
+    super(props)
+    
+    this.onDrop = this.onDrop.bind(this)
+    this.onEnter = this.onEnter.bind(this)
+    this.onLeave = this.onLeave.bind(this)
+    this.state = {
+      hover: false
+    }
+  }
+  
+  onDrop(evt){
+    evt.preventDefault()
+    evt.stopPropagation()
+    console.log(evt);
+    var files = evt.dataTransfer ? evt.dataTransfer.files : evt.target.files;
+    console.log('files', files)
+    this.setState({hover: false})
+
+    if (files && files.length > 0) {
+      var reader  = new FileReader();
+
+      reader.addEventListener("load", () => {
+        const { onChange, name } = this.props
+        onChange(name, reader.result)
+      }, false);
+      reader.readAsDataURL(files[0]);
+    }
+  
+  }
+  
+  onEnter(evt){
+    evt.preventDefault()
+    evt.stopPropagation()
+    this.setState({hover: true})
+  }
+  
+  onLeave(evt){
+    this.setState({hover: false})
+  }
+         
+  render(){
+    const { value } = this.props
+    return (
+      <FieldContainer {...this.props}>
+        <div className={"ac-field-image fit " + (this.state.hover ? 'hover' : '')} 
+             onDrop={this.onDrop}
+             onDragOver={this.onEnter}
+            onDragEnter={this.onEnter}
+            onDragLeave={this.onLeave}
+            style={{
+              backgroundImage: `url(${value})` 
+            }}>
+        </div>
+      </FieldContainer>
+    )
+  }
+}
+
 const fieldComponents = {
   "string": StringField,
   "text": StringField,
@@ -147,6 +208,7 @@ const fieldComponents = {
   "select": SelectField,
   "toggle": ToggleField,
   "icon": IconField,
+  "image": ImageField,
 }
 
 function getFieldComponent(type){
@@ -195,6 +257,48 @@ export class WidgetConfig extends React.Component {
                         dataLinks={dataLinks}
                         onChange={this.updateField} 
                         value={widget[name]} />
+    })
+  }
+}
+
+export class Form extends React.Component {
+  
+  constructor(props){
+    super(props)
+    
+    this.updateField = (name, value) => {
+      const { data, onChange } = this.props
+      onChange(data, name, value)
+    }
+  }
+  
+  showComponentUpdate(nextProps, nextState){
+    return shallowCompare(this, nextProps, nextState)
+  }
+  
+  render(){
+    return (
+      <form className="pure-form pure-form-stacked" style={{color: "#777", fontSize: 12}}>
+        <fieldset>
+          {this.renderFields()}
+        </fieldset>
+      </form>
+    )
+  }
+  
+  renderFields(){
+    const { data, fields, onChange, dataLinks } = this.props
+    return fields.map(field => {
+      const { name, type } = field
+      
+      if (type == "componentList") return undefined // TODO: remove
+      
+      const Component = getFieldComponent(type)
+      return <Component key={"field-" + name} 
+                        {...field}
+                        dataLinks={dataLinks}
+                        onChange={this.updateField} 
+                        value={data[name]} />
     })
   }
 }

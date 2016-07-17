@@ -32,6 +32,7 @@ app.use(methodOverride())
 var port = Number(process.env.PORT || 3000);
 
 app.use("/", express.static(__dirname + '/../public'));
+app.use("/landscape/public", express.static(__dirname + '/../public'));
 
 if (!env.production) {
   var webpack = require("webpack");
@@ -78,6 +79,13 @@ app.get('/form', function(req, res) {
     //add other headers here...
   });
   res.end();
+});
+
+app.get('/landscape', function(req, res) {
+  res.render('index', {
+    builderMode: "landscape",
+    pageId: "localStorage"
+  });
 });
 
 app.get('*', function(req, res) {
