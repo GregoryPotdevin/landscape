@@ -8,7 +8,8 @@ import throttle from 'lodash/throttle'
 import { FieldContainer } from './FieldContainer'
 import { StringField } from './StringField'
 import { IconField } from './IconField'
-
+import ReactQuill from 'react-quill'
+require('quill/dist/quill.snow.css')
 
 class BoolField extends React.Component {
   
@@ -138,6 +139,25 @@ class ColorField extends React.Component {
   }
 }
 
+
+class NumberInputField extends React.Component {
+  
+  showComponentUpdate(nextProps, nextState){
+    return shallowCompare(this, nextProps, nextState)
+  }
+  
+  render(){
+    const {name, value, onChange} = this.props
+    return (
+      <FieldContainer {...this.props} name={name}>
+        <input type="number" style={{width: '100%'}} value={value} 
+               onChange={(e) => onChange(name, e.target.value)} />
+      </FieldContainer>
+    )
+  }
+}
+
+
 class ImageField extends React.Component {
   
   constructor(props){
@@ -149,6 +169,10 @@ class ImageField extends React.Component {
     this.state = {
       hover: false
     }
+  }
+  
+  showComponentUpdate(nextProps, nextState){
+    return shallowCompare(this, nextProps, nextState)
   }
   
   onDrop(evt){
@@ -199,16 +223,136 @@ class ImageField extends React.Component {
   }
 }
 
+class RichTextField extends React.Component {
+    
+  showComponentUpdate(nextProps, nextState){
+    return shallowCompare(this, nextProps, nextState)
+  }
+  
+  render(){
+    const {name, value, onChange} = this.props
+    return (
+      <FieldContainer {...this.props} name={name}>
+        <div style={{height: 160, 
+          paddingBottom: 40,
+          border: '1px solid #ccc',
+          boxShadow: 'inset 0 1px 3px #ddd',
+          borderRadius: 4,  
+      }}>
+          <ReactQuill theme="snow"
+                      value={value}
+                      onChange={(value) => onChange(name, value)} />
+        </div>
+      </FieldContainer>
+    )
+  }
+}
+
+class Structure extends React.Component {
+  
+  constructor(props){
+    super(props)
+    
+    this.updateField = (name, value) => {
+      console.log("update", name, value)
+      const { index, data, onChange } = this.props
+      onChange(index, {...data, [name]: value})
+    }
+  }
+  
+  showComponentUpdate(nextProps, nextState){
+    return shallowCompare(this, nextProps, nextState)
+  }
+  
+  render(){
+    return (
+      <fieldset>
+        {this.renderFields()}
+      </fieldset>
+    )
+  }
+  
+  renderFields(){
+    const { data, fields, onChange, dataLinks } = this.props
+    return fields.map(field => {
+      const { name, type } = field
+      
+      if (type == "componentList") return undefined // TODO: remove
+      
+      const Component = getFieldComponent(type)
+      return <Component key={"field-" + name} 
+                        {...field}
+                        dataLinks={dataLinks}
+                        onChange={this.updateField} 
+                        value={data[name]} />
+    })
+  } 
+}
+
+class ListField extends React.Component {
+  constructor(props){
+    super(props)
+    
+    this.updateEntry = (idx, newValue) => {
+      const { value=[], data, name, onChange } = this.props
+      const newArray = value.map((data, i) => (i == idx) ? newValue : data)
+      console.log("newArray", newArray)
+      onChange(name, newArray)
+    }
+    
+    this.onAdd = (e) => {
+      e.preventDefault()
+      const { value=[], data, name, onChange } = this.props
+      onChange(name, [...value, {}])
+    }
+  }
+  
+  showComponentUpdate(nextProps, nextState){
+    return shallowCompare(this, nextProps, nextState)
+  }
+  
+  render(){
+    const { fields, value=[], entryLabel="Entry" } = this.props
+    
+    return (
+      <FieldContainer {...this.props}>
+        {value.map((data, idx) => (
+          <div key={idx} style={{marginBottom: 4}}>
+            <h3>{entryLabel} {idx+1}</h3>
+            <Structure index={idx} 
+                      fields={fields} 
+                      data={data} 
+                      onChange={this.updateEntry} />
+          </div>
+        ))}
+        {this.renderAddButton()}
+      </FieldContainer>
+    )
+  }
+  
+  renderAddButton(){
+    return (
+      <button className="button-success pure-button" 
+              style={{fontSize: 14, padding: 6, margin: 1}} 
+              onClick={this.onAdd}><Icon name="plus" /> Add</button>
+    )
+  }
+}
+
+
 const fieldComponents = {
   "string": StringField,
   "text": StringField,
+  "richtext": RichTextField,
   "bool": BoolField,
   "number": SliderField,
+  "integer": NumberInputField,
   "color": ColorField,
   "select": SelectField,
   "toggle": ToggleField,
   "icon": IconField,
   "image": ImageField,
+  "list": ListField,
 }
 
 function getFieldComponent(type){
@@ -233,10 +377,12 @@ export class WidgetConfig extends React.Component {
   }
   
   render(){
-    const { widget, fields, onChange } = this.props
+    const { widget, fields, onChange, aligned } = this.props
 
+    var className = "pure-form " 
+    className += aligned ? "pure-form-aligned" : "pure-form-stacked"
     return (
-      <form className="pure-form pure-form-stacked" style={{color: "#777", fontSize: 12}}>
+      <form className={className} style={{color: "#777", fontSize: 12}}>
         <fieldset>
           {this.renderFields()}
         </fieldset>
@@ -277,8 +423,13 @@ export class Form extends React.Component {
   }
   
   render(){
+    const { aligned } = this.props
+    
+    var className = "pure-form " 
+    className += aligned ? "pure-form-aligned" : "pure-form-stacked"
+    
     return (
-      <form className="pure-form pure-form-stacked" style={{color: "#777", fontSize: 12}}>
+      <form className={className} style={{color: "#777", fontSize: 12}}>
         <fieldset>
           {this.renderFields()}
         </fieldset>

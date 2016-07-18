@@ -34,11 +34,48 @@ class TopBar extends React.Component {
   }
 }
 
+const productFields = [
+  {name: "name", type: "string", required: true},
+  {name: "launch date", type: "integer", required: true},
+  {name: "description", type: "richtext", required: true},
+  {name: "screenshot", type: "image", required: true},
+  {name: "product type", type: "select", required: true, options: [
+    {value: "saas", label: "SaaS"},
+    {value: "product", label: "Product"},
+  ]},
+  {name: "comments", type: "richtext", required: true},
+]
+
+// Nom de l'offre logicielle 
+// date de lancement 
+// Version
+// Chiffre d'affaires sur ce produit
+// Modèle de licence (saas, achat de licence)
+// Gamme de produit (ged,  dam,  ERP. ...) à définir avec Systematic
+// Architecture  (web-saas/internalisé)
+// Nombre d'utilisateurs actifs 
+// Club utilisateurs  (oui/non)
+// Support utilisateur (hot-line,  tickets web)
+// Formation 
+// Références clients sur ce produit.
+// Interoperabilite avec d'autres outils: Nom du produit / éditeur 
+// Zone de commentaire pour l'argumentaire
+// Lien vers une vidéo en ligne de présentation.
+// Liens vers du Contenu - sensibilisation à la problématique - cas d'usage. ...
+// Logo du produit (à défaut celui de la société )
+
 const fields = [
   {name: "name", type: "string", required: true},
-  {name: "description", type: "text", required: true},
+  {name: "subtitle", type: "string", required: true},
   {name: "website", type: "string", required: true},
+  {name: "description", type: "richtext", required: true},
+  {name: "creation date", type: "integer", required: true},
+  {name: "country", type: "string", required: true},
+  {name: "founder", type: "string", required: true},
+  {name: "number of employees", type: "integer", required: true},
   {name: "logo", type: "image", required: true},
+  {name: "comments", type: "richtext", required: true},
+  {name: "projects", type: "list", required: true, fields: productFields, entryLabel: "Project"},
   // {name: "maxCount", type: "number", min: 1, max: 20, required: true},
   // {name: "gridSize", type: "number", min: 1, max: 6, required: true},
   // {name: "itemPadding", type: "number", min: 0, max: 50, defaultValue: 4, required: true},
@@ -66,7 +103,6 @@ class LandscapeList extends React.Component {
     return (
       <ul className="ac-sidebar-list">
         {list.map(it => {
-          console.log(it)
           return <li key={it.id} 
                     onClick={() => onSelect(it.id)}
                     className={selected == it.id ? "active" : ""}>
@@ -79,12 +115,16 @@ class LandscapeList extends React.Component {
 
 export class CompanyEditor extends React.Component {
   render(){
-    const { company, onChange } = this.props
+    const { company, onChange, onSave, onDelete } = this.props
     
     return (
       <div>
-        <h2>{company.name}</h2>
-        <Form data={company} fields={fields} onChange={onChange} />
+        <h2>
+          <button className="button-secondary pure-button" style={{float: 'right', fontSize: 14, padding: 6, margin: 1}} onClick={onSave}><Icon name="save" /> Save</button>
+          <button className="button-error pure-button" style={{float: 'right', fontSize: 14, padding: 6, margin: 1}} onClick={onDelete}><Icon name="trash" /> </button>
+          {company.name}
+        </h2>
+        <Form data={company} fields={fields} onChange={onChange} aligned />
       </div>
     )
   }
@@ -92,7 +132,10 @@ export class CompanyEditor extends React.Component {
 
 
 var defaultList = localStorage.getItem('companies')
-if (!defaultList){
+try {
+  defaultList = JSON.parse(defaultList)
+  // console.log("defaultList", defaultList)
+} catch(e){
   defaultList = [
     {id: 1, name: "AppCraft"},
     {id: 2, name: "OcamlPro"},
@@ -120,6 +163,13 @@ export class Landscape extends React.Component {
         list: list.map(el => el.id == data.id ? newEntry : el)
       })
     }
+    
+    this.onSave = (e) => {
+      console.log("save")
+      e.stopPropagation()
+      e.preventDefault()
+      localStorage.setItem('companies', JSON.stringify(this.state.list))
+    }
   }
   
   newId(){
@@ -141,8 +191,8 @@ export class Landscape extends React.Component {
           <div style={{flex: '0 0 280px', overflowY: 'scroll'}}>
             <LandscapeList list={list} selected={selected} onSelect={this.onSelect}/>
           </div>
-          <div className="pb-panel" style={{flex: 'auto', overflowY: 'scroll'}} onClick={this.handlePageClick}>
-            <CompanyEditor company={this.getSelected()} onChange={this.onChange} />
+          <div className="pb-panel" style={{flex: 'auto', overflowY: 'scroll', paddingLeft: 8}} onClick={this.handlePageClick}>
+            <CompanyEditor company={this.getSelected()} onChange={this.onChange} onSave={this.onSave} />
           </div>
         </div>
       </div>
