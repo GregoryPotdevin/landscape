@@ -14,7 +14,7 @@ export class FieldContainer extends React.Component {
                                  onChange={(e) => onChange(name, e.target.checked ? defaultValue : undefined)} 
                                  checked={value != undefined} />}
         </label>
-        <div style={{display: 'inline-block', width: 'calc(100% - 122px)'}}>
+        <div className="pb-field-content">
           {(required || (value != undefined)) && children}
         </div>
       </div>

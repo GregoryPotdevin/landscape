@@ -10,6 +10,7 @@ import { StringField } from './StringField'
 import { IconField } from './IconField'
 import ReactQuill from 'react-quill'
 require('quill/dist/quill.snow.css')
+import { MultiSelectField } from './MultiSelectField'
 
 class BoolField extends React.Component {
   
@@ -206,7 +207,7 @@ class ImageField extends React.Component {
   }
          
   render(){
-    const { value } = this.props
+    const { value, imageWidth, imageHeight } = this.props
     return (
       <FieldContainer {...this.props}>
         <div className={"ac-field-image fit " + (this.state.hover ? 'hover' : '')} 
@@ -215,7 +216,8 @@ class ImageField extends React.Component {
             onDragEnter={this.onEnter}
             onDragLeave={this.onLeave}
             style={{
-              backgroundImage: `url(${value})` 
+              backgroundImage: `url(${value})`,
+              width: imageWidth, height: imageHeight
             }}>
         </div>
       </FieldContainer>
@@ -311,14 +313,20 @@ class ListField extends React.Component {
     return shallowCompare(this, nextProps, nextState)
   }
   
+  entryLabelFor(data){
+    const label = data.label || data.title || data.name
+    if (label) return " - " + label
+    return ""
+  }
+  
   render(){
     const { fields, value=[], entryLabel="Entry" } = this.props
     
     return (
       <FieldContainer {...this.props}>
         {value.map((data, idx) => (
-          <div key={idx} style={{marginBottom: 4}}>
-            <h3>{entryLabel} {idx+1}</h3>
+          <div key={idx} className="pb-list-item">
+            <h3>{entryLabel} {idx+1} {this.entryLabelFor(data)}</h3>
             <Structure index={idx} 
                       fields={fields} 
                       data={data} 
@@ -349,6 +357,7 @@ const fieldComponents = {
   "integer": NumberInputField,
   "color": ColorField,
   "select": SelectField,
+  "multiselect": MultiSelectField,
   "toggle": ToggleField,
   "icon": IconField,
   "image": ImageField,

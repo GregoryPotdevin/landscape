@@ -18,7 +18,7 @@ class TopBar extends React.Component {
   render(){
     return (
       <div className="pb-topbar">
-        <img src="public/img/appcraft.png" width="" height="" alt="AppCraft" />
+        <img src="/landscape/public/img/appcraft.png" width="" height="" alt="AppCraft" />
         <div style={{float: 'right', fontSize: 14, padding: 4}}>
           <div className="pure-button-group" style={{fontSize: 16, display: 'inline-block'}}>
             <button className="pure-button is-selected"><Icon name="laptop" /></button>

@@ -1,14 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { DragDropContext, DragSource, DropTarget } from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
-import WidgetManager from "./WidgetManager"
-import { Widget, WidgetColumn, WidgetRow, widgets } from "./widgets"
 import { Icon } from "./components"
 import { Form } from './widget-config'
 
 import * as _ from "lodash";
 import { ComponentsPanel, PropertiesPanel} from './page-builder'
+
+import { landscapeKeywords } from './widgets/LandscapeWidget'
 
 require("../theme/index.scss");
 
@@ -27,7 +25,7 @@ class TopBar extends React.Component {
           &nbsp;&nbsp;*/}
           <span><Icon name="cogs" /> </span>
           <span><Icon name="sign-out" /> </span>
-          <span><Icon name="user" /> Laurent</span>
+          {/*<span><Icon name="user" /> Laurent</span>*/}
         </div>
       </div>
     )
@@ -43,8 +41,43 @@ const productFields = [
     {value: "saas", label: "SaaS"},
     {value: "product", label: "Product"},
   ]},
-  {name: "comments", type: "richtext", required: true},
+  {name: "comments", type: "richtext", required: false, defaultValue: ""},
 ]
+
+const partners = [
+  {name: "name", type: "string", required: true},
+  {name: "role", type: "string", required: true},
+]
+
+const collaborationsRD = [
+  {name: "name", type: "string", required: true},
+  {name: "date", type: "string", required: true},
+  {name: "partners", type: "list", required: true, fields: partners, entryLabel: "Partner"},
+  {name: "comments", type: "richtext", required: false, defaultValue: ""},
+]
+
+const collaborationsCommercial = [
+  {name: "partner", type: "string", required: true},
+  {name: "product", type: "string", required: true},
+  {name: "date of marketing", type: "number", required: true},
+  {name: "partners", type: "list", required: true, fields: partners, entryLabel: "Partner"},
+  {name: "comments", type: "richtext", required: false, defaultValue: ""},
+]
+
+// const collaborationsRD = [
+//   {name: "name", type: "string", required: true},
+//   {name: "date", type: "string", required: true},
+//   {name: "partners", type: "list", required: true, fields: partners, entryLabel: "Partner"},
+// ]
+
+// nom du programme 
+// Période 
+// Partenaires
+// Produits ou projet de commercialisation.
+// Date de début de commercialisation 
+// CA
+// Zone de commentaire pour l'argumentaire
+
 
 // Nom de l'offre logicielle 
 // date de lancement 
@@ -68,14 +101,17 @@ const fields = [
   {name: "name", type: "string", required: true},
   {name: "subtitle", type: "string", required: true},
   {name: "website", type: "string", required: true},
+  {name: "logo", type: "image", required: true, imageWidth: 128, imageHeight: 72},
+  {name: "skills", type: "multiselect", required: true, options: landscapeKeywords},
   {name: "description", type: "richtext", required: true},
   {name: "creation date", type: "integer", required: true},
   {name: "country", type: "string", required: true},
   {name: "founder", type: "string", required: true},
   {name: "number of employees", type: "integer", required: true},
-  {name: "logo", type: "image", required: true},
-  {name: "comments", type: "richtext", required: true},
+  {name: "comments", type: "richtext", required: false, defaultValue: ""},
   {name: "projects", type: "list", required: true, fields: productFields, entryLabel: "Project"},
+  {name: "r&d collaborations", type: "list", required: true, fields: collaborationsRD, entryLabel: "R&D Collaboration"},
+  {name: "commercial collaborations", type: "list", required: true, fields: collaborationsCommercial, entryLabel: "Commercial Collaboration"},
   // {name: "maxCount", type: "number", min: 1, max: 20, required: true},
   // {name: "gridSize", type: "number", min: 1, max: 6, required: true},
   // {name: "itemPadding", type: "number", min: 0, max: 50, defaultValue: 4, required: true},
@@ -90,7 +126,7 @@ const Logo = ({src}) => {
   return (
   <div className="fit" style={{
     display: "inline-block" ,
-    width: 32, 
+    width: 64, 
     height: 32, 
     verticalAlign: 'middle',
     backgroundImage: `url(${src})`}} />
@@ -100,13 +136,14 @@ class LandscapeList extends React.Component {
   
   render(){
     const { list=[], selected, onSelect } = this.props
+    const sortedList = _.sortBy(list, (el) => el.name ? el.name.toLowerCase() : "")
     return (
       <ul className="ac-sidebar-list">
-        {list.map(it => {
+        {sortedList.map(it => {
           return <li key={it.id} 
                     onClick={() => onSelect(it.id)}
                     className={selected == it.id ? "active" : ""}>
-                    <Logo src={it.logo} /> {it.name}</li>
+                    <Logo src={it.logo} /> {it.name || (`Company ${it.id}`)}</li>
         })}
       </ul>
     )
@@ -124,7 +161,8 @@ export class CompanyEditor extends React.Component {
           <button className="button-error pure-button" style={{float: 'right', fontSize: 14, padding: 6, margin: 1}} onClick={onDelete}><Icon name="trash" /> </button>
           {company.name}
         </h2>
-        <Form data={company} fields={fields} onChange={onChange} aligned />
+        <Form key={company.id} data={company} fields={fields} onChange={onChange} aligned />
+        <button className="button-secondary pure-button" style={{float: 'right', fontSize: 14, padding: 6, margin: 1}} onClick={onSave}><Icon name="save" /> Save</button>
       </div>
     )
   }
@@ -170,6 +208,16 @@ export class Landscape extends React.Component {
       e.preventDefault()
       localStorage.setItem('companies', JSON.stringify(this.state.list))
     }
+    
+    this.onAdd = (e) => {
+      e.stopPropagation()
+      e.preventDefault()
+      const id = this.newId()
+      this.setState({
+        list: [...this.state.list, {id}],
+        selected: id
+      })
+    }
   }
   
   newId(){
@@ -190,6 +238,7 @@ export class Landscape extends React.Component {
           </div>*/}
           <div style={{flex: '0 0 280px', overflowY: 'scroll'}}>
             <LandscapeList list={list} selected={selected} onSelect={this.onSelect}/>
+            <button className="button-success pure-button" style={{float: 'right', fontSize: 14, padding: 6, margin: 1}} onClick={this.onAdd}><Icon name="plus" /> Add</button>
           </div>
           <div className="pb-panel" style={{flex: 'auto', overflowY: 'scroll', paddingLeft: 8}} onClick={this.handlePageClick}>
             <CompanyEditor company={this.getSelected()} onChange={this.onChange} onSave={this.onSave} />

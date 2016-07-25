@@ -9,6 +9,7 @@ export * from "./Calendar"
 export * from "../components/Icon"
 export * from "../components/Flag"
 export * from "../components/Youtube"
+export * from "./LandscapeWidget"
 
 import { Text, Title, Image, Separator, DateWidget, IconWidget } from './BaseWidgets'
 import { Flag, YoutubeWidget, FilePreview, PDFViewer, DocumentPageWidget, Progress, Tags } from '../components'
@@ -18,6 +19,7 @@ import { Calendar } from './Calendar'
 import { Section, Columns } from './LayoutWidgets'
 import { DataList } from './DataList'
 import { TabsWidget } from './TabWidget'
+import { Landscape, landscapeKeywords } from './LandscapeWidget'
 
 // window.fetchJsonp = fetchJsonp
 
@@ -476,6 +478,24 @@ export const widgets = {
     defaultValue: {
       $type: "SearchProfiles",
       sex: true,
+    }
+  },
+  "Landscape": {
+    component: Landscape,
+    icon: "map-o",
+    label: "Landscape",
+    fields: [
+      {name: "label", type: "string", required: true},
+      {name: "keywords", type: "multiselect", required: true, options: landscapeKeywords},
+      {name: "gridSize", type: "number", min: 1, max: 6, required: true},
+      {...Fields.backgroundColor, required: true},
+    ],
+    defaultValue: {
+      $type: "Landscape",
+      label: "Open Source",
+      gridSize: 3, 
+      keywords: ["open source"],
+      backgroundColor: '#2196f3'
     }
   },
 }
