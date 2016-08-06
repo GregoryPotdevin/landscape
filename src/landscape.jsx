@@ -8,6 +8,12 @@ import { ComponentsPanel, PropertiesPanel} from './page-builder'
 
 import { landscapeKeywords } from './widgets/LandscapeWidget'
 
+import { H2, H3, Drawer, P, DataTree } from 'react-blazecss'
+
+
+import { locations } from './data'
+console.log('locations', locations)
+
 require("../theme/index.scss");
 
 // console.log("window", window);
@@ -46,13 +52,21 @@ const productFields = [
 
 const partners = [
   {name: "name", type: "string", required: true},
-  {name: "role", type: "string", required: true},
+  //{name: "role", type: "string", required: true},
+  {name: "role", type: "select", required: true, options: [
+    {value: "unknown", label: "----"},
+    {value: "developer", label: "Developer"},
+    {value: "integrator", label: "Integrator"},
+    {value: "project management", label: "Project Manager"},
+    {value: "researcher", label: "Researcher"},
+    {value: "website", label: "Website"},
+  ]},
 ]
 
 const collaborationsRD = [
   {name: "name", type: "string", required: true},
   {name: "date", type: "string", required: true},
-  {name: "partners", type: "list", required: true, fields: partners, entryLabel: "Partner"},
+  {name: "partners", type: "table", required: true, fields: partners, entryLabel: "Partner"},
   {name: "comments", type: "richtext", required: false, defaultValue: ""},
 ]
 
@@ -60,7 +74,7 @@ const collaborationsCommercial = [
   {name: "partner", type: "string", required: true},
   {name: "product", type: "string", required: true},
   {name: "date of marketing", type: "number", required: true},
-  {name: "partners", type: "list", required: true, fields: partners, entryLabel: "Partner"},
+  {name: "partners", type: "table", required: true, fields: partners, entryLabel: "Partner"},
   {name: "comments", type: "richtext", required: false, defaultValue: ""},
 ]
 
@@ -99,15 +113,30 @@ const collaborationsCommercial = [
 
 const fields = [
   {name: "name", type: "string", required: true},
+  {name: "created", type: "string", required: true},
+  
   {name: "subtitle", type: "string", required: true},
   {name: "website", type: "string", required: true},
   {name: "logo", type: "image", required: true, imageWidth: 128, imageHeight: 72},
   {name: "skills", type: "multiselect", required: true, options: landscapeKeywords},
   {name: "description", type: "richtext", required: true},
   {name: "creation date", type: "integer", required: true},
-  {name: "country", type: "string", required: true},
+  {name: "full address", type: "address", required: true},
+  {name: "street number", type: "string", required: true, width: "30%"},
+  {name: "street", type: "string", required: true, width: "70%"},
+  {name: "zip code", type: "string", required: true, width: "30%"},
+  {name: "city", type: "string", required: true, width: "70%"},
+  {name: "departement", type: "string", required: true, width: "30%"},
+  {name: "region", type: "string", required: true, width: "30%"},
+  {name: "country", type: "string", required: true, width: "40%"},
+  {name: "company label", type: "computed", template: "{{name}}{{#founder}} by {{founder}}{{/founder}}", required: true},
   {name: "founder", type: "string", required: true},
-  {name: "number of employees", type: "integer", required: true},
+  {name: "number of employees", type: "length", target: "employees", required: true},
+  {name: "employees", type: "table", required: true, fields: [
+    {name: "first_name", type: "string", required: true, width: "30%"},
+    {name: "last_name", type: "string", required: true, width: "30%"},
+    {name: "full_name", type: "computed", template: "{{first_name}} {{last_name}}", required: true},
+  ], entryLabel: "Employee"},
   {name: "comments", type: "richtext", required: false, defaultValue: ""},
   {name: "projects", type: "list", required: true, fields: productFields, entryLabel: "Project"},
   {name: "r&d collaborations", type: "list", required: true, fields: collaborationsRD, entryLabel: "R&D Collaboration"},
@@ -150,6 +179,10 @@ class LandscapeList extends React.Component {
   }
 }
 
+
+require('blaze/dist/blaze.min.css')
+require('blaze/dist/blaze.animations.min.css')
+
 export class CompanyEditor extends React.Component {
   render(){
     const { company, onChange, onSave, onDelete } = this.props
@@ -180,6 +213,13 @@ try {
     {id: 3, name: "Smile"}
   ]
 }
+if (!defaultList){
+   defaultList = [
+    {id: 1, name: "AppCraft"},
+    {id: 2, name: "OcamlPro"},
+    {id: 3, name: "Smile"}
+  ]
+}
 
 export class Landscape extends React.Component {
   
@@ -196,7 +236,7 @@ export class Landscape extends React.Component {
     this.onChange = (data, name, value) => {
       const { list } = this.state
       const newEntry = {...data, [name]: value}
-      console.log(newEntry)
+      // console.log(newEntry)
       this.setState({
         list: list.map(el => el.id == data.id ? newEntry : el)
       })
@@ -241,6 +281,7 @@ export class Landscape extends React.Component {
             <button className="button-success pure-button" style={{float: 'right', fontSize: 14, padding: 6, margin: 1}} onClick={this.onAdd}><Icon name="plus" /> Add</button>
           </div>
           <div className="pb-panel" style={{flex: 'auto', overflowY: 'scroll', paddingLeft: 8}} onClick={this.handlePageClick}>
+            <DataTree data={locations.children} animate/>
             <CompanyEditor company={this.getSelected()} onChange={this.onChange} onSave={this.onSave} />
           </div>
         </div>
@@ -251,6 +292,7 @@ export class Landscape extends React.Component {
 		// )
 	}
 }
+
 
 
 // widgets["PageBuilder"] = {

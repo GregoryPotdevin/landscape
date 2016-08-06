@@ -98,7 +98,7 @@ app.get('*', function(req, res) {
 });
 
 var runnable = app.listen(port, function () {
-  console.log('server running at localhost:3000, go refresh and see magic');
+  console.log('server running at localhost:' + port + ', go refresh and see magic');
 });
 
 // const runnable = app.listen(config.apiPort, (err) => {

@@ -290,7 +290,6 @@ class Structure extends React.Component {
     })
   } 
 }
-
 class ListField extends React.Component {
   constructor(props){
     super(props)
@@ -348,6 +347,277 @@ class ListField extends React.Component {
 }
 
 
+
+
+
+
+
+
+
+class RowStructure extends React.Component {
+  
+  constructor(props){
+    super(props)
+    
+    this.updateField = (name, value) => {
+      console.log("update", name, value)
+      const { index, data, onChange } = this.props
+      onChange(index, {...data, [name]: value})
+    }
+  }
+  
+  showComponentUpdate(nextProps, nextState){
+    return shallowCompare(this, nextProps, nextState)
+  }
+  
+  render(){
+    const { index, isExtra } = this.props
+    return (
+      <tr style={{opacity: (isExtra ? 0.5 : undefined)}} >
+        <td>{isExtra ? '' : (index+1)}</td>
+        {this.renderFields()}
+      </tr>
+    )
+  }
+  
+  renderFields(){
+    const { data={}, fields, onChange, dataLinks } = this.props
+    return fields.map(field => {
+      const { name, type } = field
+      
+      if (type == "componentList") return undefined // TODO: remove
+      
+      const Component = getFieldComponent(type)
+        
+      if (type === "computed" || type === "length"){
+        return (
+          <td key={"field-" + name}>
+            <Component key={"field-" + name} 
+                        {...field}
+                        noContainer={true}
+                        dataLinks={dataLinks}
+                        width="100%"
+                        data={data} />
+          </td>
+        )
+      }
+      return (
+        <td key={"field-" + name}>
+          <Component
+                      {...field}
+                      noContainer={true}
+                      dataLinks={dataLinks}
+                      onChange={this.updateField} 
+                      width="100%"
+                      value={data[name]} />
+        </td>
+      )
+    })
+  } 
+}
+
+
+class TableField extends React.Component {
+  constructor(props){
+    super(props)
+    
+    this.updateEntry = (idx, newValue) => {
+      const { value=[], data, name, onChange } = this.props
+      if (idx >= value.length){ // Add new entry
+        onChange(name, [...value, newValue])
+      } else { // Update entry
+        onChange(name, value.map((data, i) => (i == idx) ? newValue : data))
+      }
+    }
+    
+    this.onAdd = (e) => {
+      e.preventDefault()
+      const { value=[], data, name, onChange } = this.props
+      onChange(name, [...value, {}])
+    }
+  }
+  
+  showComponentUpdate(nextProps, nextState){
+    return shallowCompare(this, nextProps, nextState)
+  }
+  
+  entryLabelFor(data){
+    const label = data.label || data.title || data.name
+    if (label) return " - " + label
+    return ""
+  }
+  
+  render(){
+    const { fields, value=[], entryLabel="Entry" } = this.props
+    
+    let rows = value.map((data, idx) => (
+      <RowStructure key={idx} 
+                    index={idx} 
+                    fields={fields} 
+                    data={data} 
+                    onChange={this.updateEntry} />
+    ))
+    
+    // Extra greyed out one to add rows
+    rows.push(
+      <RowStructure key={value.length} 
+                    index={value.length}
+                    isExtra 
+                    fields={fields}
+                    onChange={this.updateEntry} />
+    )
+    
+    return (
+      <FieldContainer {...this.props}>
+        <table className="pure-table pure-table-bordered pure-table-striped" style={{width: '100%', fontSize: 'small'}}>
+          <thead>
+            <tr>
+              <th style={{width: 60}}></th>
+              {fields.map((field, idx) => (
+                <th key={idx+1} style={{width: field.width}}>{field.name}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows}
+          </tbody>
+        </table>
+      </FieldContainer>
+    )
+  }
+}
+
+class AddressField extends React.Component {
+  
+  constructor(props){
+    super(props)
+    
+    this.handleValidate = this.handleValidate.bind(this)
+    // this.state = {
+    //   street_number, street, departement, region, country
+    // }
+  }
+  
+  handleValidate() {
+    var place = this.autocomplete.getPlace();
+    console.log("place.address_components", place.address_components)
+
+    const keyMapping = {
+      "street_number": "street number",
+      "route": "street",
+      "locality": "city",
+      "administrative_area_level_2": "departement",
+      "administrative_area_level_1": "region",
+      "country": "country",
+      "postal_code": "zip code",
+    }
+    // onChange("street number", )
+    // onChange("street", )
+    // onChange("departement", )
+    // onChange("region", )
+    // onChange("country", )
+      
+    // for (var component in componentForm) {
+    //   document.getElementById(component).value = '';
+    //   document.getElementById(component).disabled = false;
+    // }
+
+    // Get each component of the address from the place details
+    // and fill the corresponding field on the form.
+    const processed = {}
+    const { data, name, onChange } = this.props
+    for (var i = 0; i < place.address_components.length; i++) {
+      const component = place.address_components[i]
+      var addressType = component.types[0];
+      if (keyMapping[addressType]) {
+        onChange(keyMapping[addressType], component.long_name)
+        processed[keyMapping[addressType]] = true
+      }
+    }
+    
+    // Flush unprocessed values
+    Object.keys(keyMapping).forEach(k => {
+      const name = keyMapping[k]
+      if (!processed[name]) onChange(name, "")
+    })
+    //   });
+  }
+  
+  componentDidMount(){
+    this.autocomplete = new window.google.maps.places.Autocomplete(
+      /** @type {!HTMLInputElement} */(this.refs.autocomplete),
+      {types: ['geocode']});
+
+    this.listener = this.autocomplete.addListener('place_changed', this.handleValidate)
+  }
+  
+  componentWillUnmount(){
+    if (this.listener) {
+      this.listener.remove()
+      this.listener = null
+    }
+  }
+  
+  render(){
+    return (
+      <FieldContainer {...this.props}>
+        <div>
+          <input ref="autocomplete" type="search" style={{width: '100%'}} />
+        </div>
+      </FieldContainer>
+    )
+  }
+}
+
+
+import Hogan from 'react-hogan'
+import hogan from 'hogan.js'
+
+class ComputedField extends React.Component {
+  
+  compileTemplate(template){
+    // lazy template compiling
+    if (this.compiledTemplate == template){
+      return this.compilationResult
+    }
+    this.compilationResult = hogan.compile(template)
+    this.compiledTemplate = template
+    return this.compilationResult
+  }
+  
+  render(){
+    const { data, template } = this.props
+    console.log(template, data)
+        
+    const compiledTemplate = this.compileTemplate(template)
+    const __text = compiledTemplate.render(data)
+    
+    return (
+      <FieldContainer {...this.props}>
+        <div>
+          {__text}
+        </div>
+      </FieldContainer>
+    )
+  }
+}
+
+class LengthField extends React.Component {
+  
+  render(){
+    const { data, target } = this.props
+    
+    return (
+      <FieldContainer {...this.props}>
+        <div>
+          {data[target] ? data[target].length : 0}
+        </div>
+      </FieldContainer>
+    )
+  }
+}
+
+
 const fieldComponents = {
   "string": StringField,
   "text": StringField,
@@ -361,7 +631,11 @@ const fieldComponents = {
   "toggle": ToggleField,
   "icon": IconField,
   "image": ImageField,
+  "address": AddressField,
   "list": ListField,
+  "table": TableField,
+  "computed": ComputedField,
+  "length": LengthField,
 }
 
 function getFieldComponent(type){
@@ -407,6 +681,12 @@ export class WidgetConfig extends React.Component {
       if (type == "componentList") return undefined // TODO: remove
       
       const Component = getFieldComponent(type)
+      if (type === "computed" || type === "length"){
+        return <Component key={"field-" + name} 
+                          {...field}
+                          dataLinks={dataLinks}
+                          data={widget} />
+      }
       return <Component key={"field-" + name} 
                         {...field}
                         dataLinks={dataLinks}
@@ -453,7 +733,13 @@ export class Form extends React.Component {
       
       if (type == "componentList") return undefined // TODO: remove
       
-      const Component = getFieldComponent(type)
+      const Component = getFieldComponent(type)      
+      if (type === "computed" || type === "length"){
+        return <Component key={"field-" + name} 
+                          {...field}
+                          dataLinks={dataLinks}
+                          data={data} />
+      }
       return <Component key={"field-" + name} 
                         {...field}
                         dataLinks={dataLinks}
