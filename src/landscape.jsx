@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { Icon } from "./components"
+import { Icon, TreePanel } from "./components"
 import { Form } from './widget-config'
 
 import * as _ from "lodash";
@@ -221,6 +221,10 @@ if (!defaultList){
   ]
 }
 
+
+
+
+
 export class Landscape extends React.Component {
   
   constructor(props){
@@ -281,6 +285,9 @@ export class Landscape extends React.Component {
             <button className="button-success pure-button" style={{float: 'right', fontSize: 14, padding: 6, margin: 1}} onClick={this.onAdd}><Icon name="plus" /> Add</button>
           </div>
           <div className="pb-panel" style={{flex: 'auto', overflowY: 'scroll', paddingLeft: 8}} onClick={this.handlePageClick}>
+            <h2>TreePanel</h2>
+            <TreePanel data={locations} />
+            <h2>Tree</h2>
             <DataTree data={locations.children} animate/>
             <CompanyEditor company={this.getSelected()} onChange={this.onChange} onSave={this.onSave} />
           </div>
